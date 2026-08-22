@@ -4,9 +4,13 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/Rajit-Dutta/GolangMonolith/internal/config"
 )
 
 func main() {
+	cfg := config.MustLoad()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -14,7 +18,7 @@ func main() {
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 	srv := http.Server{
-		Addr:         "8090",
+		Addr:         ":" + cfg.Port,
 		Handler:      mux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 20 * time.Second,
