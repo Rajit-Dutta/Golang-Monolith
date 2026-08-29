@@ -6,10 +6,16 @@ import (
 	"time"
 
 	"github.com/Rajit-Dutta/GolangMonolith/internal/config"
+	"github.com/Rajit-Dutta/GolangMonolith/internal/db"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
 	cfg := config.MustLoad()
+	_, err := db.Connect(cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("sql.Open: %w", err)
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
