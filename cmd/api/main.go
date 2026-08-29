@@ -7,22 +7,20 @@ import (
 
 	"github.com/Rajit-Dutta/GolangMonolith/internal/config"
 	"github.com/Rajit-Dutta/GolangMonolith/internal/db"
+	"github.com/Rajit-Dutta/GolangMonolith/internal/handlers"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
 	cfg := config.MustLoad()
-	_, err := db.Connect(cfg.DatabaseURL)
+	db, err := db.Connect(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("sql.Open: %w", err)
+		log.Fatalf("sql.Open: %v", err)
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
-	})
+	mux.HandleFunc("GET /healthz", handlers.Healthz)
+	mux.HandleFunc("GET /listings", handlers.Listings(db))
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,
 		Handler:      mux,
