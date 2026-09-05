@@ -4,8 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/Rajit-Dutta/GolangMonolith/internal/middleware"
 )
 
 type listing struct {
@@ -18,12 +21,14 @@ type listing struct {
 }
 
 type ListingHandler struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *slog.Logger
 }
 
-func ListingConstructor(db *sql.DB) *ListingHandler {
+func ListingConstructor(db *sql.DB, logger *slog.Logger) *ListingHandler {
 	return &ListingHandler{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
@@ -68,10 +73,12 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 
 func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	request_id := middleware.RetrieveCTXIDFromContext(ctx)
 	id := r.PathValue("id")
-	_, err := lh.db.ExecContext(ctx, `DELETE FROM LISTINGS WHERE id = $1`, id)
+	_, err := lh.db.ExecContext(ctx, `DELETE FROM LISTING WHERE id = $1`, id)
 	if err != nil {
 		log.Printf("db.query: %v", err)
+		lh.logger.Error("delete failed", "listing_id", id, "request_id", request_id, "error", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
