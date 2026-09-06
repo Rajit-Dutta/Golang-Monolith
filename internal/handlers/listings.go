@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Rajit-Dutta/GolangMonolith/internal/httpx"
 	"github.com/Rajit-Dutta/GolangMonolith/internal/middleware"
 )
 
@@ -42,7 +43,7 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 		`)
 	if err != nil {
 		log.Printf("db.query: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "Something went wrong", httpx.Error_internal_error)
 		return
 	}
 	defer rows.Close()
@@ -53,7 +54,7 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 		var l listing
 		if err := rows.Scan(&l.ID, &l.Title, &l.Description, &l.Price, &l.City, &l.CreatedAt); err != nil {
 			log.Printf("rows.scan: %v", err)
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			httpx.Error(w, http.StatusInternalServerError, "Something went wrong", httpx.Error_internal_error)
 			return
 		}
 		listings = append(listings, l)
@@ -61,7 +62,7 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	if err := rows.Err(); err != nil {
 		log.Printf("rows.err: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "Something went wrong", httpx.Error_internal_error)
 		return
 	}
 
@@ -79,7 +80,7 @@ func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("db.query: %v", err)
 		lh.logger.Error("delete failed", "listing_id", id, "request_id", request_id, "error", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "Something went wrong", httpx.Error_internal_error)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
