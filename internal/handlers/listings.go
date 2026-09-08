@@ -87,7 +87,7 @@ func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (lh ListingHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var req listing
+	var req CreateListingRequest
 	ctx := r.Context()
 	request_id := middleware.RetrieveCTXIDFromContext((ctx))
 
@@ -98,14 +98,15 @@ func (lh ListingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	row := lh.db.QueryRowContext(ctx, `
-	INSERT INTO listings (title,description,price,city) VALUES ($1, $2, $3, $4) RETURNING id`,
+	INSERT INTO listings (title,description,price,city) VALUES ($1, $2, $3, $4) RETURNING id, title, created_at`,
 		req.Title, req.Description, req.Price, req.City)
 
-	var id string
-	if err := row.Scan(&id); err != nil {
+	var res CreateListingResponse
+	if err := row.Scan(&res.ID, &res.Title, &res.CreatedAt); err != nil {
 		lh.logger.Error("creation failed", "request_id", request_id, "error", err)
 		httpx.Error(w, http.StatusInternalServerError, "Something went wrong", httpx.Error_internal_error)
 		return
 	}
-	lh.logger.Info("listing created", "listing_id", id, "request_id", request_id)
+	lh.logger.Info("listing created", "listing_id", res.ID, "request_id", request_id)
+	_ = json.NewEncoder(w).Encode(res)
 }
