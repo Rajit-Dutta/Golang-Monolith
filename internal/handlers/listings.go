@@ -97,6 +97,11 @@ func (lh ListingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusBadRequest, "Invalid body", httpx.Error_malformed_json)
 		return
 	}
+
+	if err := req.Validate(); err != nil {
+		httpx.Error(w, http.StatusUnprocessableEntity, "Validation failed", httpx.Error_validation_failed)
+	}
+
 	row := lh.db.QueryRowContext(ctx, `
 	INSERT INTO listings (title,description,price,city) VALUES ($1, $2, $3, $4) RETURNING id, title, created_at`,
 		req.Title, req.Description, req.Price, req.City)
