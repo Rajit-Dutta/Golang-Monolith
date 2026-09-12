@@ -26,6 +26,7 @@ type errorEnvelope struct {
 type errorPayload struct {
 	ErrorMessage string `json:"message"`
 	ErrorCode    code   `json:"code"`
+	ErrorField   string `json:"field,omitempty"`
 }
 
 func Error(w http.ResponseWriter, status int, message string, code code) {
@@ -36,5 +37,17 @@ func Error(w http.ResponseWriter, status int, message string, code code) {
 		Error: errorPayload{
 			ErrorMessage: message,
 			ErrorCode:    code,
+		}})
+}
+
+func ValidationError(w http.ResponseWriter, status int, message string, code code, field string) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	_ = json.NewEncoder(w).Encode(errorEnvelope{
+		Error: errorPayload{
+			ErrorMessage: message,
+			ErrorCode:    code,
+			ErrorField:   field,
 		}})
 }
